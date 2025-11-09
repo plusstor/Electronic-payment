@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة الدفع الإلكتروني</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    
+  body {
+    font-family: "Cairo", sans-serif;
+    background-color: #111;
+    color: white;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    width: 100%;
+    padding: 20px 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    animation: pulse 3s infinite alternate;
+    background: linear-gradient(90deg, red, blue);
+    background-size: 400% 400%;
+  }
+
+  @keyframes pulse {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* تنسيق القائمة */
+  .apps-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .app-card {
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: right;
+    cursor: pointer;
+    transition: transform 0.2s;
+    /* ⭐️ تصميم يشبه الكارد لكن مع تركيز على النص ⭐️ */
+    border-right: 5px solid transparent; 
+    border-image: linear-gradient(to top, red, blue) 1;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5), 0 0 5px rgba(0, 0, 255, 0.5);
+  }
+
+  .app-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 15px red, 0 0 15px blue;
+  }
+
+  .app-name {
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .app-name span:last-child {
+      font-size: 24px; /* سهم للأمام */
+  }
+
+  /* تخصيص أيقونات الأقسام */
+  .icon-wallet::before { content: 'محفظة 💳 '; color: #33ffcc; }
+  .icon-bank::before { content: 'بنك 🏦 '; color: #ffcc33; }
+  .icon-cash::before { content: 'كاش 💵 '; color: #ff3399; }
+</style>
+</head>
+<body>
+
+  <div class="header">قائمة الدفع الإلكتروني</div>
+
+  <div class="apps-grid" id="appsGrid"></div>
+
+<script>
+  // 🧠 تعريف أقسام الدفع ونوع الحقول المطلوبة
+  const paymentMethods = [
+    { name: "USDT-TRC20", type: "wallet", icon: "icon-wallet", placeholder: "عنوان المحفظة (TRC20)" },
+    { name: "USDT-BEP20", type: "wallet", icon: "icon-wallet", placeholder: "عنوان المحفظة (BEP20)" },
+    { name: "TRON-TRX", type: "wallet", icon: "icon-wallet", placeholder: "عنوان المحفظة (TRON)" },
+    { name: "BINANCE", type: "wallet", icon: "icon-wallet", placeholder: "رقم المحفظة / ID" },
+    { name: "PAYEER", type: "wallet", icon: "icon-wallet", placeholder: "رقم حساب PAYEER" },
+    
+    // البنوك التي تحتاج ايبان واسم
+    { name: "بنك الراجحي", type: "bank", icon: "icon-bank", placeholder: "ايبان بنك الراجحي" },
+    { name: "بنك صفوة الاردن", type: "bank", icon: "icon-bank", placeholder: "ايبان بنك صفوة" },
+    { name: "بنك زراعات تركيا", type: "bank", icon: "icon-bank", placeholder: "ايبان بنك زراعات" },
+    { name: "بنك البلاد", type: "bank", icon: "icon-bank", placeholder: "ايبان بنك البلاد" },
+    { name: "بنك فلسطين", type: "bank", icon: "icon-bank", placeholder: "ايبان بنك فلسطين" },
+    
+    // خدمات الكاش التي تحتاج تفاصيل إضافية
+    { name: "زين كاش العراق", type: "cash", icon: "icon-cash", placeholder: "رقم الهاتف (زين كاش العراق)" },
+    { name: "زين كاش الاردن", type: "cash", icon: "icon-cash", placeholder: "رقم الهاتف (زين كاش الاردن)" },
+    { name: "فودافون كاش مصر", type: "cash", icon: "icon-cash", placeholder: "رقم الهاتف (فودافون كاش مصر)" },
+    { name: "ويش مني لبنان", type: "cash", icon: "icon-cash", placeholder: "رقم الهاتف (ويش مني)" },
+    
+    // شام كاش وسيريتيل كاش
+    { name: "شام كاش سوريا", type: "syria_cash", icon: "icon-cash", placeholder: "عنوان محفظة شام كاش" },
+    { name: "سيريتيل كاش سوريا", type: "cash", icon: "icon-cash", placeholder: "رقم الهاتف (سيريتيل كاش)" },
+  ];
+
+  const grid = document.getElementById("appsGrid");
+
+  function displayMethods() {
+    grid.innerHTML = "";
+    paymentMethods.forEach(method => {
+      const card = document.createElement("div");
+      card.className = `app-card ${method.icon}`;
+      card.onclick = () => openPaymentDetails(method);
+
+      card.innerHTML = `
+        <div class="app-name">${method.name} <span>&#10148;</span></div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // 🚀 الانتقال إلى صفحة تفاصيل الدفع (payment_details.html)
+  function openPaymentDetails(method) {
+    const params = new URLSearchParams({
+      name: method.name,
+      type: method.type,
+      placeholder: method.placeholder,
+    });
+    window.location.href = `payment_details.html?${params.toString()}`;
+  }
+
+  // تشغيل أول مرة لعرض كل الأقسام
+  displayMethods();
+</script>
+
+</body>
+</html>
